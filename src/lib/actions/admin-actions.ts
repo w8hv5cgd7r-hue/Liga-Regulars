@@ -15,15 +15,30 @@ export async function updatePlayerAction(formData: FormData): Promise<ActionResu
   await requireAdmin();
   const supabase = await createClient();
 
-  const id = String(formData.get("id"));
+    const id = String(formData.get("id"));
   const full_name = String(formData.get("full_name") ?? "").trim();
   const handicap = Number(formData.get("handicap"));
-  const role = String(formData.get("role")) as AppRole;
-  const status = String(formData.get("status")) as PlayerStatus;
+  const roleRaw = formData.get("role");
+  const statusRaw = formData.get("status");
 
   if (!id || !full_name || Number.isNaN(handicap)) {
     return { ok: false, error: "Datos de jugador incompletos." };
   }
+
+  // Cuando editas tu propia fila, los campos de rol y estado están deshabilitados
+  // en el formulario (para que no puedas quitarte el admin sin querer). Un campo
+  // deshabilitado no se envía, así que en ese caso mantenemos el valor actual.
+  const { data: current, error: currentError } = await supabase
+    .from("players")
+    .select("role, status")
+    .eq("id", id)
+    .single();
+  if (currentError || !current) {
+    return { ok: false, error: "No se encontró el jugador." };
+  }
+
+  const role = (roleRaw ? String(roleRaw) : current.role) as AppRole;
+  const status = (statusRaw ? String(statusRaw) : current.status) as PlayerStatus;
 
   const { error } = await supabase
     .from("players")
