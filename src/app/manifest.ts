@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Liga de Golf",
-    short_name: "Liga Golf",
+    name: "Liga Regulars",
+    short_name: "Liga Regulars",
     description: "Resultados y clasificaciones de nuestra liga de golf entre amigos",
     start_url: "/",
     display: "standalone",
