@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Liga de Golf",
+  title: "Liga Regulars",
   description: "Resultados y clasificaciones de nuestra liga de golf entre amigos",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Liga de Golf",
+    title: "Liga Regulars",
   },
 };
 
