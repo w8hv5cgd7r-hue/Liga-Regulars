@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f5f7f3;
+  --foreground: #1a2b21;
+  --card: #ffffff;
+  --border: #dfe6dd;
+  --muted: #5b6b60;
+  --primary: #1f6f4a;
+  --primary-dark: #165236;
+  --primary-foreground: #ffffff;
+  --accent: #c98a1f;
+  --danger: #b3261e;
+  --focus: #2f8f63;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Accesibilidad: foco visible siempre, aunque el navegador use :focus-visible distinto */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Tamaño mínimo de zona táctil recomendado (44px) para botones/inputs en móvil */
+button,
+input,
+select,
+textarea,
+a.tap-target {
+  min-height: 44px;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
