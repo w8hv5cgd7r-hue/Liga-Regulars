@@ -20,7 +20,7 @@ export function NavBar({ player }: { player: Player }) {
             <span className="text-xl" aria-hidden>
               ⛳
             </span>
-            <span>Liga de Golf</span>
+            <span>Liga Regulars</span>
           </Link>
           <nav className="hidden items-center gap-1 sm:flex" aria-label="Navegación principal">
             {links.map((l) => (
