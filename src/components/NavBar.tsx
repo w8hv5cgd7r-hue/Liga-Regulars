@@ -45,10 +45,9 @@ export function NavBar({ player }: { player: Player }) {
             <Link href="/perfil" className="text-sm text-muted hover:text-foreground">
               {player.full_name}
             </Link>
-            <form action={signOutAction}>
+                        <form action={signOutAction}>
               <button
-                type="button"
-                onClick={(e) => e.currentTarget.form?.requestSubmit()}
+                type="submit"
                 className="rounded-md border border-border px-3 py-2 text-sm hover:bg-background"
               >
                 Salir
