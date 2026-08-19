@@ -112,6 +112,112 @@ export async function createRoundAction(payload: CreateRoundPayload): Promise<Cr
   return { ok: true, roundId };
 }
 
+export interface UpdateRoundPayload extends CreateRoundPayload {
+  id: string;
+}
+
+export async function updateRoundAction(payload: UpdateRoundPayload): Promise<CreateRoundResult> {
+  const me = await requireActivePlayer();
+  const supabase = await createClient();
+
+  if (!payload.course_id || !payload.season_id || !payload.played_on) {
+    return { ok: false, error: "Falta el campo, la temporada o la fecha." };
+  }
+  if (payload.players.length < 1) {
+    return { ok: false, error: "Selecciona al menos un jugador." };
+  }
+  if (payload.scores.length === 0) {
+    return { ok: false, error: "No se ha introducido ningún resultado." };
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from("rounds")
+    .select("created_by")
+    .eq("id", payload.id)
+    .single();
+  if (existingError || !existing) {
+    return { ok: false, error: "La partida no existe." };
+  }
+  if (me.role !== "admin" && existing.created_by !== me.id) {
+    return { ok: false, error: "No tienes permiso para editar esta partida." };
+  }
+
+  const { data: season, error: seasonError } = await supabase
+    .from("seasons")
+    .select("modality")
+    .eq("id", payload.season_id)
+    .single();
+  if (seasonError || !season) {
+    return { ok: false, error: "La temporada seleccionada no existe." };
+  }
+  const modality = season.modality as Modality;
+
+  const teamA = payload.team_a ?? [];
+  const teamB = payload.team_b ?? [];
+  if (MATCH_MODALITIES.includes(modality)) {
+    const expectedSize = modality === "match1v1" ? 1 : 2;
+    if (teamA.length !== expectedSize || teamB.length !== expectedSize) {
+      return {
+        ok: false,
+        error:
+          modality === "match1v1"
+            ? "Elige un jugador para cada lado del 1 contra 1."
+            : "Elige 2 jugadores para cada pareja.",
+      };
+    }
+    if (teamA.some((id) => teamB.includes(id))) {
+      return { ok: false, error: "Un jugador no puede estar en los dos equipos." };
+    }
+  }
+
+  const { error: roundError } = await supabase
+    .from("rounds")
+    .update({
+      course_id: payload.course_id,
+      season_id: payload.season_id,
+      played_on: payload.played_on,
+      notes: payload.notes || null,
+      team_a: MATCH_MODALITIES.includes(modality) ? teamA : null,
+      team_b: MATCH_MODALITIES.includes(modality) ? teamB : null,
+    })
+    .eq("id", payload.id);
+  if (roundError) return { ok: false, error: roundError.message };
+
+  // Sustituimos jugadores y golpes existentes por los nuevos.
+  const { error: deletePlayersError } = await supabase
+    .from("round_players")
+    .delete()
+    .eq("round_id", payload.id);
+  if (deletePlayersError) return { ok: false, error: deletePlayersError.message };
+
+  const { error: deleteScoresError } = await supabase
+    .from("hole_scores")
+    .delete()
+    .eq("round_id", payload.id);
+  if (deleteScoresError) return { ok: false, error: deleteScoresError.message };
+
+  const { error: playersError } = await supabase.from("round_players").insert(
+    payload.players.map((p) => ({ round_id: payload.id, player_id: p.player_id, handicap: p.handicap }))
+  );
+  if (playersError) return { ok: false, error: playersError.message };
+
+  const { error: scoresError } = await supabase.from("hole_scores").insert(
+    payload.scores.map((s) => ({
+      round_id: payload.id,
+      player_id: s.player_id,
+      hole_number: s.hole_number,
+      strokes: s.strokes,
+    }))
+  );
+  if (scoresError) return { ok: false, error: scoresError.message };
+
+  revalidatePath("/rounds");
+  revalidatePath(`/rounds/${payload.id}`);
+  revalidatePath("/clasificaciones");
+  revalidatePath("/");
+  return { ok: true, roundId: payload.id };
+}
+
 export async function deleteRoundAction(id: string): Promise<CreateRoundResult> {
   await requireActivePlayer();
   const supabase = await createClient();

@@ -114,6 +114,9 @@ queréis que haya más de uno).
    modalidad) cuenta esta tarjeta. Si es golpes o Stableford, eliges quién ha jugado; si es 1
    contra 1 o parejas, eliges los dos lados del enfrentamiento. Después, campo, fecha y los
    golpes de cada hoyo.
+5. Si os equivocáis al apuntar un resultado, entrad en la partida (**Partidas → la tarjeta en
+   cuestión**) y usad **Editar** para corregirla o **Borrar** para eliminarla del todo. Solo puede
+   hacerlo quien la creó, o un administrador.
 
 ## Desarrollo
 

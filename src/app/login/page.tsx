@@ -37,7 +37,7 @@ export default function LoginPage() {
         <div className="mb-2 text-4xl" aria-hidden>
           ⛳
         </div>
-        <h1 className="text-2xl font-bold text-primary-dark">Liga Regulars de Golf</h1>
+        <h1 className="text-2xl font-bold text-primary-dark">Liga Regulars</h1>
         <p className="mt-1 text-sm text-muted">Accede con tu cuenta de jugador</p>
       </div>
 

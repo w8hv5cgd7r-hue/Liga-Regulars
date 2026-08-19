@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getRoundFull } from "@/lib/data/rounds";
 import { getPlayers } from "@/lib/data/players";
 import { requireActivePlayer } from "@/lib/auth";
@@ -45,7 +46,17 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
           </p>
           {round.notes && <p className="mt-1 text-sm">{round.notes}</p>}
         </div>
-        {canDelete && <DeleteRoundButton id={round.id} />}
+        {canDelete && (
+          <div className="flex items-center gap-3">
+            <Link
+              href={`/rounds/${round.id}/editar`}
+              className="text-sm font-medium text-primary underline"
+            >
+              Editar
+            </Link>
+            <DeleteRoundButton id={round.id} />
+          </div>
+        )}
       </div>
 
       <section className="overflow-x-auto rounded-lg border border-border bg-card p-3">

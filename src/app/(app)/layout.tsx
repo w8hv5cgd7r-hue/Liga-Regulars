@@ -9,7 +9,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <NavBar player={player} />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-4 sm:pb-8">{children}</main>
       <footer className="hidden border-t border-border py-4 text-center text-xs text-muted sm:block">
-        Liga de Golf Regulars
+        Liga Regulars entre amigos
       </footer>
     </div>
   );

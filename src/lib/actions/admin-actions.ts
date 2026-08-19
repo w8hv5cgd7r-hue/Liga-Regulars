@@ -15,7 +15,7 @@ export async function updatePlayerAction(formData: FormData): Promise<ActionResu
   await requireAdmin();
   const supabase = await createClient();
 
-    const id = String(formData.get("id"));
+  const id = String(formData.get("id"));
   const full_name = String(formData.get("full_name") ?? "").trim();
   const handicap = Number(formData.get("handicap"));
   const roleRaw = formData.get("role");

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Minus, Plus } from "lucide-react";
-import { createRoundAction } from "@/lib/actions/round-actions";
+import { createRoundAction, updateRoundAction } from "@/lib/actions/round-actions";
 import {
   computeMatchPlay,
   computeStableford,
@@ -11,7 +11,15 @@ import {
   type HoleInfo,
   type PlayerHoleScores,
 } from "@/lib/scoring/engine";
-import { MODALITY_LABEL, MODALITY_SHORT, type CourseWithHoles, type Modality, type Player, type Season } from "@/lib/types";
+import {
+  MODALITY_LABEL,
+  MODALITY_SHORT,
+  type CourseWithHoles,
+  type Modality,
+  type Player,
+  type RoundFull,
+  type Season,
+} from "@/lib/types";
 import { formatDateEs } from "@/lib/format";
 
 function todayISO() {
@@ -24,25 +32,43 @@ export function RoundForm({
   players,
   courses,
   seasons,
+  initialRound,
 }: {
   players: Player[];
   courses: CourseWithHoles[];
   seasons: Season[];
+  /** Si se pasa, el formulario edita esta partida en vez de crear una nueva. */
+  initialRound?: RoundFull;
 }) {
   const router = useRouter();
-  const [seasonId, setSeasonId] = useState(seasons[0]?.id ?? "");
-  const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
-  const [playedOn, setPlayedOn] = useState(todayISO());
-  const [notes, setNotes] = useState("");
+  const isEdit = !!initialRound;
+  const initialIsMatch =
+    initialRound?.season.modality === "match1v1" || initialRound?.season.modality === "matchpairs";
+
+  const [seasonId, setSeasonId] = useState(initialRound?.season_id ?? seasons[0]?.id ?? "");
+  const [courseId, setCourseId] = useState(initialRound?.course_id ?? courses[0]?.id ?? "");
+  const [playedOn, setPlayedOn] = useState(initialRound?.played_on ?? todayISO());
+  const [notes, setNotes] = useState(initialRound?.notes ?? "");
 
   // golpes / stableford
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    initialRound && !initialIsMatch ? initialRound.players.map((p) => p.player_id) : []
+  );
   // match1v1 / matchpairs
-  const [teamA, setTeamA] = useState<string[]>([]);
-  const [teamB, setTeamB] = useState<string[]>([]);
+  const [teamA, setTeamA] = useState<string[]>(initialRound?.team_a ?? []);
+  const [teamB, setTeamB] = useState<string[]>(initialRound?.team_b ?? []);
 
-  const [handicaps, setHandicaps] = useState<Record<string, number>>({});
-  const [scores, setScores] = useState<Record<string, Record<number, number>>>({});
+  const [handicaps, setHandicaps] = useState<Record<string, number>>(
+    initialRound ? Object.fromEntries(initialRound.players.map((p) => [p.player_id, p.handicap])) : {}
+  );
+  const [scores, setScores] = useState<Record<string, Record<number, number>>>(() => {
+    if (!initialRound) return {};
+    const map: Record<string, Record<number, number>> = {};
+    for (const s of initialRound.scores) {
+      map[s.player_id] = { ...(map[s.player_id] ?? {}), [s.hole_number]: s.strokes };
+    }
+    return map;
+  });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -144,7 +170,7 @@ export function RoundForm({
     if (scoreRows.length === 0) return setError("Introduce al menos algún resultado.");
 
     startTransition(async () => {
-      const result = await createRoundAction({
+      const payload = {
         course_id: courseId,
         season_id: seasonId,
         played_on: playedOn,
@@ -156,12 +182,15 @@ export function RoundForm({
         scores: scoreRows,
         team_a: isMatch ? teamA : undefined,
         team_b: isMatch ? teamB : undefined,
-      });
+      };
+      const result = isEdit
+        ? await updateRoundAction({ id: initialRound!.id, ...payload })
+        : await createRoundAction(payload);
       if (!result.ok) {
         setError(result.error ?? "No se pudo guardar la partida.");
         return;
       }
-      router.push(`/rounds/${result.roundId}`);
+      router.push(`/rounds/${result.roundId ?? initialRound!.id}`);
     });
   }
 
@@ -426,7 +455,7 @@ export function RoundForm({
         disabled={pending}
         className="rounded-md bg-primary px-4 py-3 font-medium text-primary-foreground hover:bg-primary-dark disabled:opacity-60"
       >
-        {pending ? "Guardando…" : "Guardar resultado"}
+        {pending ? "Guardando…" : isEdit ? "Guardar cambios" : "Guardar resultado"}
       </button>
     </div>
   );
