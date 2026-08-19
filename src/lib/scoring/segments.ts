@@ -87,6 +87,18 @@ export function runningMatchStatuses(holeResults: MatchHoleResult[]): RunningMat
   });
 }
 
+/**
+ * Clase de texto Tailwind para colorear el nombre de un jugador/pareja según
+ * el lado del match play al que pertenece: el mismo color que ya se usa para
+ * marcar "quién va ganando" (verde = lado A, ámbar = lado B), para que sea
+ * fácil relacionar visualmente un nombre con su resultado.
+ */
+export function sideTextClass(playerId: string, teamA: string[], teamB: string[]): string {
+  if (teamA.includes(playerId)) return "text-primary";
+  if (teamB.includes(playerId)) return "text-accent";
+  return "";
+}
+
 /** Suma de los pares de los hoyos en los que un jugador ya tiene un resultado apuntado. */
 export function parPlayed(holes: HoleInfo[], strokes: Record<number, number>): number {
   return holes.filter((h) => strokes[h.hole_number] != null).reduce((sum, h) => sum + h.par, 0);
