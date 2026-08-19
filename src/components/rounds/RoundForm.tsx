@@ -152,8 +152,9 @@ export function RoundForm({
     strokes: resolvedScores(p.id),
   }));
 
-  const strokeTotal =
-    modality === "stroke" && holeInfos.length ? computeStrokePlay(holeInfos, playerScoresForEngine) : [];
+  // Se calcula siempre (no solo en modalidad golpes) porque también se
+  // muestra como resultado de golpes dentro del resumen de match play.
+  const strokeTotal = holeInfos.length ? computeStrokePlay(holeInfos, playerScoresForEngine) : [];
   const strokeFront =
     modality === "stroke" && frontHoles.length ? computeStrokePlay(frontHoles, playerScoresForEngine) : [];
   const strokeBack =
@@ -183,6 +184,8 @@ export function RoundForm({
     ? summarizeMatchHoles(matchPreview.holes.filter((h) => h.hole_number > 9))
     : null;
   const matchTotalSummary = matchPreview ? summarizeMatchHoles(matchPreview.holes) : null;
+  const teamAName = teamA.map((id) => players.find((p) => p.id === id)?.full_name).join(" y ");
+  const teamBName = teamB.map((id) => players.find((p) => p.id === id)?.full_name).join(" y ");
 
   function buildPayload() {
     setError(null);
@@ -457,9 +460,7 @@ export function RoundForm({
           </p>
           <p className="mt-1 text-xs text-muted">
             {isMatch
-              ? `${teamA.map((id) => players.find((p) => p.id === id)?.full_name).join(" y ")} vs ${teamB
-                  .map((id) => players.find((p) => p.id === id)?.full_name)
-                  .join(" y ")}`
+              ? `${teamAName} vs ${teamBName}`
               : selectedPlayers.map((p) => p.full_name).join(", ")}
           </p>
         </section>
@@ -592,13 +593,14 @@ export function RoundForm({
                       <span className="text-muted">Partido sin empezar.</span>
                     ) : matchPreview.outcome === "in_progress" ? (
                       <span className="font-medium">
-                        {upDownLabel(matchTotalSummary!)} · thru {matchTotalSummary!.thru}
+                        {upDownLabel(matchTotalSummary!, teamAName, teamBName)} · thru{" "}
+                        {matchTotalSummary!.thru}
                       </span>
                     ) : matchPreview.outcome === "halved" ? (
                       <span className="font-medium">Empate (AS)</span>
                     ) : (
                       <span className="font-medium">
-                        Gana el equipo {matchPreview.outcome === "team_a" ? "A" : "B"} (
+                        Gana {matchPreview.outcome === "team_a" ? teamAName : teamBName} (
                         {matchPreview.statusLabel})
                       </span>
                     )}
@@ -622,6 +624,26 @@ export function RoundForm({
                       </div>
                     </div>
                   )}
+                  <div className="border-t border-border pt-2">
+                    <span className="block text-xs font-medium text-foreground">
+                      Resultado de golpes {useHandicap ? "(neto)" : "(sin hándicap)"}
+                    </span>
+                    <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted">
+                      {selectedPlayers.map((p) => {
+                        const row = strokeTotal.find((r) => r.player_id === p.id);
+                        return (
+                          <div key={p.id} className="flex items-center justify-between">
+                            <span>{p.full_name.split(" ")[0]}</span>
+                            <span>
+                              {useHandicap
+                                ? `${row?.netTotal ?? "–"} (bruto ${row?.grossTotal ?? "–"})`
+                                : (row?.grossTotal ?? "–")}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <span className="text-muted">Completa ambos equipos para ver el resultado.</span>

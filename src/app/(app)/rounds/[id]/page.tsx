@@ -40,7 +40,9 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
   const modality = round.season.modality;
   const canDelete = me.role === "admin" || me.id === round.created_by;
 
-  const strokeTotal = modality === "stroke" ? computeStrokePlay(holes, playerScores) : [];
+  // Se calcula siempre (no solo en modalidad golpes) porque también se
+  // muestra como resultado de golpes dentro del resumen de match play.
+  const strokeTotal = computeStrokePlay(holes, playerScores);
   const strokeFront = modality === "stroke" && frontHoles.length ? computeStrokePlay(frontHoles, playerScores) : [];
   const strokeBack = modality === "stroke" && backHoles.length ? computeStrokePlay(backHoles, playerScores) : [];
 
@@ -62,6 +64,8 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
     ? summarizeMatchHoles(matchResult.holes.filter((h) => h.hole_number > 9))
     : null;
   const matchTotalSummary = matchResult ? summarizeMatchHoles(matchResult.holes) : null;
+  const teamAName = round.team_a?.map((pid) => nameById.get(pid)).join(" y ") ?? "";
+  const teamBName = round.team_b?.map((pid) => nameById.get(pid)).join(" y ") ?? "";
 
   return (
     <div className="flex flex-col gap-6">
@@ -192,17 +196,16 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="mb-2 font-semibold">{MODALITY_SHORT[modality]}</h2>
           <p className="text-sm">
-            {round.team_a.map((pid) => nameById.get(pid)).join(" y ")}{" "}
-            <span className="text-muted">vs</span> {round.team_b.map((pid) => nameById.get(pid)).join(" y ")}
+            {teamAName} <span className="text-muted">vs</span> {teamBName}
           </p>
           <p className="mt-1 text-lg font-bold text-primary-dark">
             {matchTotalSummary && matchTotalSummary.thru === 0
               ? "Sin empezar"
               : matchResult.outcome === "in_progress"
-                ? `${upDownLabel(matchTotalSummary!)} · thru ${matchTotalSummary!.thru}`
+                ? `${upDownLabel(matchTotalSummary!, teamAName, teamBName)} · thru ${matchTotalSummary!.thru}`
                 : matchResult.outcome === "halved"
                   ? "Empate (AS)"
-                  : `Gana ${matchResult.outcome === "team_a" ? round.team_a.map((pid) => nameById.get(pid)).join(" y ") : round.team_b.map((pid) => nameById.get(pid)).join(" y ")} (${matchResult.statusLabel})`}
+                  : `Gana ${matchResult.outcome === "team_a" ? teamAName : teamBName} (${matchResult.statusLabel})`}
           </p>
           {showBackNine && matchFrontSummary && matchBackSummary && matchTotalSummary && (
             <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-muted">
@@ -223,6 +226,26 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
               </div>
             </div>
           )}
+          <div className="mt-3 border-t border-border pt-2">
+            <span className="block text-xs font-medium text-foreground">
+              Resultado de golpes {useHandicap ? "(neto)" : "(sin hándicap)"}
+            </span>
+            <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted">
+              {round.players.map((rp) => {
+                const row = strokeTotal.find((r) => r.player_id === rp.player_id);
+                return (
+                  <div key={rp.player_id} className="flex items-center justify-between">
+                    <span>{nameById.get(rp.player_id)?.split(" ")[0] ?? "?"}</span>
+                    <span>
+                      {useHandicap
+                        ? `${row?.netTotal ?? "–"} (bruto ${row?.grossTotal ?? "–"})`
+                        : (row?.grossTotal ?? "–")}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </section>
       )}
     </div>
