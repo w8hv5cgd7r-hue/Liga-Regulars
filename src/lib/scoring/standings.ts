@@ -48,7 +48,10 @@ function toHoleInfo(round: RoundFull): HoleInfo[] {
 function toPlayerScores(round: RoundFull): PlayerHoleScores[] {
   return round.players.map((rp) => ({
     player_id: rp.player_id,
-    handicap: rp.handicap,
+    // Si la ronda se jugó sin hándicap, se computa como si todos fueran
+    // scratch (0); el hándicap real se conserva en round.players para el
+    // histórico, pero aquí no se aplica.
+    handicap: round.use_handicap === false ? 0 : rp.handicap,
     strokes: Object.fromEntries(
       round.scores
         .filter((s) => s.player_id === rp.player_id)

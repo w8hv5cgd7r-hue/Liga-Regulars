@@ -113,6 +113,12 @@ create table if not exists rounds (
   notes text,
   team_a uuid[],
   team_b uuid[],
+  -- Si es false, la partida se juega "scratch" (como si todos tuvieran
+  -- hándicap 0): no se reparten golpes de hándicap al calcular el neto,
+  -- los puntos Stableford ni el match play de esta ronda en concreto. El
+  -- hándicap real de cada jugador se sigue guardando en round_players para
+  -- el histórico/gráfica de evolución.
+  use_handicap boolean not null default true,
   created_by uuid references players(id),
   created_at timestamptz not null default now()
 );

@@ -91,6 +91,7 @@ export default async function PlayerStatsPage({ params }: PageProps<"/jugadores/
               <div key={r.round_id} className="flex items-center justify-between text-sm">
                 <span>
                   {formatDateEs(r.played_on)} · {r.course_name} · {r.season_name}
+                  {!r.use_handicap && <span className="ml-1 text-xs text-muted">(sin hcp)</span>}
                 </span>
                 <span className="text-muted">Neto {r.net}</span>
               </div>
@@ -109,6 +110,7 @@ export default async function PlayerStatsPage({ params }: PageProps<"/jugadores/
               <div key={r.round_id} className="flex items-center justify-between text-sm">
                 <span>
                   {formatDateEs(r.played_on)} · {r.course_name} · {r.season_name}
+                  {!r.use_handicap && <span className="ml-1 text-xs text-muted">(sin hcp)</span>}
                 </span>
                 <span className="text-muted">{r.stablefordPoints} pts</span>
               </div>

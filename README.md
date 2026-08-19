@@ -20,6 +20,18 @@ usarse desde el móvil justo al acabar de jugar.
   gestiona hándicaps, campos y temporadas.
 - **Estadísticas por jugador**: evolución del hándicap (a partir de todas sus partidas), puntos
   Stableford por partida, récord en 1 contra 1 y en parejas.
+- **Con hándicap o sin (scratch)**: cada partida elige si se juega con hándicap o "a pelo" (como
+  si todos tuvierais 0). Se guarda en la propia partida y se ve en el listado y en el detalle.
+- **Par por defecto**: al elegir quién juega, la tarjeta arranca ya rellena a par en todos los
+  hoyos; solo tocáis los hoyos donde el resultado no sea par.
+- **Tarjeta con ida, vuelta y total**: en campos de 18 hoyos se ve el parcial de los hoyos 1-9,
+  el de los hoyos 10-18 y el total, tanto al apuntar como al consultar una partida.
+- **Match play en vivo**: mientras metes los golpes se ve quién va arriba y por cuántos hoyos, a
+  cuántos hoyos jugados ("thru"), y el desglose ida / vuelta / total.
+- **Apuntar resultado en dos pasos**: primero se elige temporada, campo, fecha, quién juega y si
+  hay hándicap (eso ya se guarda); después se abre la tarjeta para ir metiendo los golpes hoyo a
+  hoyo, viendo el resultado en vivo.
+- **Editar y borrar partidas** ya guardadas, solo quien las creó o un administrador.
 - Diseño mobile-first, con barra de navegación inferior, botones grandes y posibilidad de
   "instalar" la web en la pantalla de inicio del móvil (PWA básica).
 
@@ -39,6 +51,20 @@ modalidad) para la que cuenta esa tarjeta. A partir de ahí:
   hoyo a hoyo (en parejas, la mejor bola de los dos compañeros) para decidir quién gana.
   Clasificación de temporada = puntos de liga (3 por partido ganado, 1 por empatado, 0 por
   perdido), sumados por jugador.
+
+## Actualizar una instalación ya desplegada
+
+Si ya tenías la app funcionando y estás actualizando a esta versión (con hándicap sí/no, ida y
+vuelta, tarjeta en dos pasos), hace falta un pequeño cambio en la base de datos **antes** de subir
+el código nuevo. En Supabase, ve a **SQL Editor → New query**, pega esto y pulsa **Run**:
+
+```sql
+alter table rounds add column if not exists use_handicap boolean not null default true;
+```
+
+Esto añade la nueva columna sin tocar las partidas que ya tenías guardadas (todas quedan marcadas
+como "con hándicap", que es como se jugaban hasta ahora). Después de ejecutar esto ya puedes subir
+el código nuevo a GitHub con normalidad.
 
 ## Puesta en marcha
 
@@ -111,9 +137,10 @@ queréis que haya más de uno).
    poder apuntar resultados de esa modalidad; podéis tener varias temporadas abiertas a la vez,
    una por modalidad.
 4. Desde **Partidas → Apuntar resultado**: primero eliges para qué temporada (y por tanto
-   modalidad) cuenta esta tarjeta. Si es golpes o Stableford, eliges quién ha jugado; si es 1
-   contra 1 o parejas, eliges los dos lados del enfrentamiento. Después, campo, fecha y los
-   golpes de cada hoyo.
+   modalidad) cuenta esta tarjeta, si se juega con hándicap o sin, el campo, la fecha y quién
+   juega (si es golpes o Stableford, quién ha jugado; si es 1 contra 1 o parejas, los dos lados
+   del enfrentamiento). Al pulsar "Continuar" eso ya queda guardado y se abre la tarjeta, donde
+   vas metiendo los golpes de cada hoyo y ves el resultado en vivo.
 5. Si os equivocáis al apuntar un resultado, entrad en la partida (**Partidas → la tarjeta en
    cuestión**) y usad **Editar** para corregirla o **Borrar** para eliminarla del todo. Solo puede
    hacerlo quien la creó, o un administrador.

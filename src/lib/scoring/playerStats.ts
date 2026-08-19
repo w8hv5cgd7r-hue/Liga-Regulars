@@ -13,6 +13,7 @@ export interface PlayerRoundStat {
   course_name: string;
   season_name: string;
   handicap: number;
+  use_handicap: boolean;
   gross: number;
   net: number;
   netToPar: number;
@@ -29,6 +30,7 @@ export interface PlayerMatchStat {
   teammates: string[];
   opponents: string[];
   statusLabel: string;
+  use_handicap: boolean;
 }
 
 function toHoleInfo(round: RoundFull): HoleInfo[] {
@@ -40,7 +42,9 @@ function toHoleInfo(round: RoundFull): HoleInfo[] {
 function toPlayerScores(round: RoundFull): PlayerHoleScores[] {
   return round.players.map((rp) => ({
     player_id: rp.player_id,
-    handicap: rp.handicap,
+    // Si la ronda se jugó sin hándicap, se computa como scratch (0); el
+    // hándicap real se conserva para el histórico (computePlayerHandicapHistory).
+    handicap: round.use_handicap === false ? 0 : rp.handicap,
     strokes: Object.fromEntries(
       round.scores.filter((s) => s.player_id === rp.player_id).map((s) => [s.hole_number, s.strokes])
     ),
@@ -76,6 +80,7 @@ export function computePlayerStrokeStats(rounds: RoundFull[], playerId: string):
       course_name: round.course.name,
       season_name: round.season.name,
       handicap: mine.handicap,
+      use_handicap: round.use_handicap !== false,
       gross: row.grossTotal,
       net: row.netTotal,
       netToPar: row.netTotal - coursePar,
@@ -113,6 +118,7 @@ export function computePlayerStablefordStats(rounds: RoundFull[], playerId: stri
       course_name: round.course.name,
       season_name: round.season.name,
       handicap: mine.handicap,
+      use_handicap: round.use_handicap !== false,
       gross: grossRow.grossTotal,
       net: grossRow.netTotal,
       netToPar: grossRow.netTotal - coursePar,
@@ -158,6 +164,7 @@ export function computePlayerMatchStats(
       teammates: myTeam.filter((id) => id !== playerId),
       opponents: otherTeam,
       statusLabel: result.statusLabel,
+      use_handicap: round.use_handicap !== false,
     });
   }
 

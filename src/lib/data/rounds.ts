@@ -37,6 +37,7 @@ export async function getRounds(opts?: { limit?: number }): Promise<RoundListIte
     notes: r.notes,
     team_a: r.team_a,
     team_b: r.team_b,
+    use_handicap: r.use_handicap,
     created_by: r.created_by,
     created_at: r.created_at,
     course_name: r.courses?.name ?? "Campo desconocido",

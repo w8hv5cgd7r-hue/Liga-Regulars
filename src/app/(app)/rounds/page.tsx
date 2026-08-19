@@ -28,6 +28,7 @@ export default async function RoundsPage() {
               <p className="font-medium">{r.course_name}</p>
               <p className="text-xs text-muted">
                 {formatDateEs(r.played_on)} · {r.season_name} · {r.player_names.join(", ")}
+                {!r.use_handicap && <span className="ml-1 text-accent">· sin hándicap</span>}
               </p>
             </div>
             <span aria-hidden className="text-muted">

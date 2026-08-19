@@ -74,6 +74,8 @@ export interface Round {
   notes: string | null;
   team_a: string[] | null;
   team_b: string[] | null;
+  /** Si es false, la partida se juega sin hándicap (scratch, como si fuera 0 para todos). */
+  use_handicap: boolean;
   created_by: string | null;
   created_at: string;
 }

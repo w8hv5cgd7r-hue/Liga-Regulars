@@ -10,6 +10,8 @@ export interface CreateRoundPayload {
   season_id: string;
   played_on: string;
   notes?: string;
+  /** Si es false, se juega sin hándicap (scratch, como si todos tuvieran 0). Por defecto true. */
+  use_handicap?: boolean;
   players: { player_id: string; handicap: number }[];
   scores: { player_id: string; hole_number: number; strokes: number }[];
   /** Solo para temporadas de modalidad match1v1 (1 id) o matchpairs (2 ids). */
@@ -74,6 +76,7 @@ export async function createRoundAction(payload: CreateRoundPayload): Promise<Cr
       season_id: payload.season_id,
       played_on: payload.played_on,
       notes: payload.notes || null,
+      use_handicap: payload.use_handicap ?? true,
       team_a: MATCH_MODALITIES.includes(modality) ? teamA : null,
       team_b: MATCH_MODALITIES.includes(modality) ? teamB : null,
       created_by: me.id,
@@ -177,6 +180,7 @@ export async function updateRoundAction(payload: UpdateRoundPayload): Promise<Cr
       season_id: payload.season_id,
       played_on: payload.played_on,
       notes: payload.notes || null,
+      use_handicap: payload.use_handicap ?? true,
       team_a: MATCH_MODALITIES.includes(modality) ? teamA : null,
       team_b: MATCH_MODALITIES.includes(modality) ? teamB : null,
     })
