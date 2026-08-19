@@ -15,6 +15,7 @@ import {
   hasBackNine,
   parPlayed,
   runningMatchStatuses,
+  sideTextClass,
   splitFrontBack,
   summarizeMatchHoles,
   toParLabel,
@@ -76,6 +77,14 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
   const matchRunning = matchResult ? runningMatchStatuses(matchResult.holes) : [];
   const teamAName = round.team_a?.map((pid) => nameById.get(pid)).join(" y ") ?? "";
   const teamBName = round.team_b?.map((pid) => nameById.get(pid)).join(" y ") ?? "";
+  const teamAIds = round.team_a ?? [];
+  const teamBIds = round.team_b ?? [];
+  const matchLeaderColorClass =
+    matchTotalSummary && matchTotalSummary.wonA !== matchTotalSummary.wonB
+      ? matchTotalSummary.wonA > matchTotalSummary.wonB
+        ? "text-primary"
+        : "text-accent"
+      : "";
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,7 +120,12 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
               <th className="px-1 py-1">Hoyo</th>
               <th className="px-1 py-1">Par</th>
               {round.players.map((rp) => (
-                <th key={rp.player_id} className="px-1 py-1 text-center">
+                <th
+                  key={rp.player_id}
+                  className={`px-1 py-1 text-center font-medium ${
+                    isMatch ? sideTextClass(rp.player_id, teamAIds, teamBIds) : ""
+                  }`}
+                >
                   {nameById.get(rp.player_id)?.split(" ")[0] ?? "?"}
                 </th>
               ))}
@@ -225,16 +239,31 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="mb-2 font-semibold">{MODALITY_SHORT[modality]}</h2>
           <p className="text-sm">
-            {teamAName} <span className="text-muted">vs</span> {teamBName}
+            <span className="font-medium text-primary">{teamAName}</span>{" "}
+            <span className="text-muted">vs</span>{" "}
+            <span className="font-medium text-accent">{teamBName}</span>
           </p>
-          <p className="mt-1 text-lg font-bold text-primary-dark">
-            {matchTotalSummary && matchTotalSummary.thru === 0
-              ? "Sin empezar"
-              : matchResult.outcome === "in_progress"
-                ? `${upDownLabel(matchTotalSummary!, teamAName, teamBName)} · thru ${matchTotalSummary!.thru}`
-                : matchResult.outcome === "halved"
-                  ? "Empate (AS)"
-                  : `Gana ${matchResult.outcome === "team_a" ? teamAName : teamBName} (${matchResult.statusLabel})`}
+          <p className="mt-1 text-lg font-bold">
+            {matchTotalSummary && matchTotalSummary.thru === 0 ? (
+              <span className="text-primary-dark">Sin empezar</span>
+            ) : matchResult.outcome === "in_progress" ? (
+              <>
+                <span className={matchLeaderColorClass}>
+                  {upDownLabel(matchTotalSummary!, teamAName, teamBName)}
+                </span>{" "}
+                <span className="text-primary-dark">· thru {matchTotalSummary!.thru}</span>
+              </>
+            ) : matchResult.outcome === "halved" ? (
+              <span className="text-primary-dark">Empate (AS)</span>
+            ) : (
+              <span className="text-primary-dark">
+                Gana{" "}
+                <span className={matchResult.outcome === "team_a" ? "text-primary" : "text-accent"}>
+                  {matchResult.outcome === "team_a" ? teamAName : teamBName}
+                </span>{" "}
+                ({matchResult.statusLabel})
+              </span>
+            )}
           </p>
           {showBackNine && matchFrontSummary && matchBackSummary && matchTotalSummary && (
             <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-muted">
@@ -264,7 +293,9 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
                 const row = strokeTotal.find((r) => r.player_id === rp.player_id);
                 return (
                   <div key={rp.player_id} className="flex items-center justify-between">
-                    <span>{nameById.get(rp.player_id)?.split(" ")[0] ?? "?"}</span>
+                    <span className={`font-medium ${sideTextClass(rp.player_id, teamAIds, teamBIds)}`}>
+                      {nameById.get(rp.player_id)?.split(" ")[0] ?? "?"}
+                    </span>
                     <span>
                       {useHandicap
                         ? `${row?.netTotal ?? "–"} (bruto ${row?.grossTotal ?? "–"})`
