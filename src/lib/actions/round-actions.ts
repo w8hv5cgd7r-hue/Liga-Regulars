@@ -37,9 +37,9 @@ export async function createRoundAction(payload: CreateRoundPayload): Promise<Cr
   if (payload.players.length < 1) {
     return { ok: false, error: "Selecciona al menos un jugador." };
   }
-  if (payload.scores.length === 0) {
-    return { ok: false, error: "No se ha introducido ningún resultado." };
-  }
+  // Nota: no se exige que ya haya golpes apuntados aquí. El flujo en dos fases
+  // guarda la partida en cuanto se pulsa "Continuar" (fase "setup"), antes de
+  // que se haya metido ningún resultado en la tarjeta; eso es intencional.
 
   const { data: season, error: seasonError } = await supabase
     .from("seasons")
@@ -128,9 +128,6 @@ export async function updateRoundAction(payload: UpdateRoundPayload): Promise<Cr
   }
   if (payload.players.length < 1) {
     return { ok: false, error: "Selecciona al menos un jugador." };
-  }
-  if (payload.scores.length === 0) {
-    return { ok: false, error: "No se ha introducido ningún resultado." };
   }
 
   const { data: existing, error: existingError } = await supabase
