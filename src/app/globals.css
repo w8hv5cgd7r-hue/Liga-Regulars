@@ -30,6 +30,34 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+/*
+ * Escala tipográfica global un poco más grande que la de Tailwind por
+ * defecto (para que se lea mejor en móvil), manteniendo la misma jerarquía
+ * relativa entre tamaños. Al redefinir aquí los tamaños "text-xs".."text-3xl"
+ * se aplica automáticamente a TODA la app (cada sitio que use esas clases),
+ * sin tocar espaciados/anchos/altos (que usan su propia escala aparte), así
+ * que el diseño y la maquetación no cambian, solo el texto se ve más grande.
+ * Valores por defecto de Tailwind, para comparar/revertir si hiciera falta:
+ *   xs 0.75rem/1, sm 0.875rem/1.25/0.875, base 1rem/1.5, lg 1.125rem/1.75,
+ *   xl 1.25rem/1.75, 2xl 1.5rem/2, 3xl 1.875rem/2.25.
+ */
+@theme {
+  --text-xs: 0.8125rem; /* 13px (antes 12px) */
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.9375rem; /* 15px (antes 14px) */
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1.0625rem; /* 17px (antes 16px) */
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.1875rem; /* 19px (antes 18px) */
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.3125rem; /* 21px (antes 20px) */
+  --text-xl--line-height: 1.875rem;
+  --text-2xl: 1.5625rem; /* 25px (antes 24px) */
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.9375rem; /* 31px (antes 30px) */
+  --text-3xl--line-height: 2.375rem;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
 }

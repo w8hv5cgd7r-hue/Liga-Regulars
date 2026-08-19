@@ -138,7 +138,7 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
               <tr key={h.hole_number} className="border-t border-border">
                 <td className="px-1 py-1 font-medium">
                   {h.hole_number}
-                  <span className="ml-1 text-[10px] text-muted">SI{h.stroke_index}</span>
+                  <span className="ml-1 text-[11px] text-muted">SI{h.stroke_index}</span>
                 </td>
                 <td className="px-1 py-1 text-muted">{h.par}</td>
                 {round.players.map((rp) => (
@@ -166,7 +166,7 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
                   <tr key={h.hole_number} className="border-t border-border">
                     <td className="px-1 py-1 font-medium">
                       {h.hole_number}
-                      <span className="ml-1 text-[10px] text-muted">SI{h.stroke_index}</span>
+                      <span className="ml-1 text-[11px] text-muted">SI{h.stroke_index}</span>
                     </td>
                     <td className="px-1 py-1 text-muted">{h.par}</td>
                     {round.players.map((rp) => (

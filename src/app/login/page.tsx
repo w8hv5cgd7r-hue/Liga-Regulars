@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -34,9 +35,14 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-sm flex-col justify-center px-6 py-10">
       <div className="mb-8 text-center">
-        <div className="mb-2 text-4xl" aria-hidden>
-          ⛳
-        </div>
+        <Image
+          src="/brand/logo.png"
+          alt="Liga Regulars"
+          width={112}
+          height={112}
+          className="mx-auto mb-2 h-28 w-28 object-contain"
+          priority
+        />
         <h1 className="text-2xl font-bold text-primary-dark">Liga Regulars</h1>
         <p className="mt-1 text-sm text-muted">Accede con tu cuenta de jugador</p>
       </div>

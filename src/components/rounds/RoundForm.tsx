@@ -504,7 +504,7 @@ export function RoundForm({
                         <button
                           type="button"
                           onClick={() => fillPar(p.id)}
-                          className="text-[10px] font-medium text-primary underline"
+                          className="text-[11px] font-medium text-primary underline"
                         >
                           rellenar par
                         </button>
@@ -520,7 +520,7 @@ export function RoundForm({
                   <tr key={h.hole_number} className="border-t border-border">
                     <td className="px-1 py-1 font-medium">
                       {h.hole_number}
-                      <span className="ml-1 text-[10px] text-muted">SI{h.stroke_index}</span>
+                      <span className="ml-1 text-[11px] text-muted">SI{h.stroke_index}</span>
                     </td>
                     <td className="px-1 py-1 text-muted">{h.par}</td>
                     {selectedPlayers.map((p) => (
@@ -551,7 +551,7 @@ export function RoundForm({
                       <tr key={h.hole_number} className="border-t border-border">
                         <td className="px-1 py-1 font-medium">
                           {h.hole_number}
-                          <span className="ml-1 text-[10px] text-muted">SI{h.stroke_index}</span>
+                          <span className="ml-1 text-[11px] text-muted">SI{h.stroke_index}</span>
                         </td>
                         <td className="px-1 py-1 text-muted">{h.par}</td>
                         {selectedPlayers.map((p) => (

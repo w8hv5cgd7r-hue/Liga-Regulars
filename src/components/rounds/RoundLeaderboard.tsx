@@ -42,7 +42,7 @@ export function RoundLeaderboard({ rows, emptyLabel }: { rows: LeaderboardRow[];
               <td className="px-1 py-1.5 font-medium">{r.name}</td>
               <td className="px-1 py-1.5 text-center tabular-nums">
                 <span className="font-semibold">{r.main}</span>
-                {r.extra && <span className="ml-1 text-[10px] font-normal text-muted">{r.extra}</span>}
+                {r.extra && <span className="ml-1 text-[11px] font-normal text-muted">{r.extra}</span>}
               </td>
               {showToPar && (
                 <td className="px-1 py-1.5 text-center tabular-nums text-muted">{r.toPar ?? "–"}</td>

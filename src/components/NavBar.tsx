@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { signOutAction } from "@/lib/actions/auth-actions";
 import type { Player } from "@/lib/types";
 import { LayoutDashboard, ListPlus, Trophy, User, ShieldCheck, UserCircle } from "lucide-react";
@@ -17,9 +18,14 @@ export function NavBar({ player }: { player: Player }) {
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2 font-bold text-primary-dark">
-            <span className="text-xl" aria-hidden>
-              ⛳
-            </span>
+            <Image
+              src="/brand/logo.png"
+              alt="Liga Regulars"
+              width={40}
+              height={40}
+              className="h-10 w-10 rounded-md object-contain"
+              priority
+            />
             <span>Liga Regulars</span>
           </Link>
           <nav className="hidden items-center gap-1 sm:flex" aria-label="Navegación principal">
@@ -70,7 +76,7 @@ export function NavBar({ player }: { player: Player }) {
               <li key={l.href}>
                 <Link
                   href={l.href}
-                  className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-foreground"
+                  className="flex flex-col items-center gap-0.5 py-2 text-[12px] text-foreground"
                 >
                   <Icon size={20} />
                   {l.label}
@@ -81,7 +87,7 @@ export function NavBar({ player }: { player: Player }) {
           <li>
             <Link
               href="/perfil"
-              className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-foreground"
+              className="flex flex-col items-center gap-0.5 py-2 text-[12px] text-foreground"
             >
               <UserCircle size={20} />
               Perfil
