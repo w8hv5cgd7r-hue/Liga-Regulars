@@ -15,6 +15,7 @@ import {
   hasBackNine,
   parPlayed,
   runningMatchStatuses,
+  sideTextClass,
   splitFrontBack,
   summarizeMatchHoles,
   toParLabel,
@@ -189,6 +190,12 @@ export function RoundForm({
   const matchRunning = matchPreview ? runningMatchStatuses(matchPreview.holes) : [];
   const teamAName = teamA.map((id) => players.find((p) => p.id === id)?.full_name).join(" y ");
   const teamBName = teamB.map((id) => players.find((p) => p.id === id)?.full_name).join(" y ");
+  const matchLeaderColorClass =
+    matchTotalSummary && matchTotalSummary.wonA !== matchTotalSummary.wonB
+      ? matchTotalSummary.wonA > matchTotalSummary.wonB
+        ? "text-primary"
+        : "text-accent"
+      : "";
 
   function buildPayload() {
     setError(null);
@@ -462,9 +469,15 @@ export function RoundForm({
             </span>
           </p>
           <p className="mt-1 text-xs text-muted">
-            {isMatch
-              ? `${teamAName} vs ${teamBName}`
-              : selectedPlayers.map((p) => p.full_name).join(", ")}
+            {isMatch ? (
+              <>
+                <span className="font-medium text-primary">{teamAName}</span>{" "}
+                <span className="text-muted">vs</span>{" "}
+                <span className="font-medium text-accent">{teamBName}</span>
+              </>
+            ) : (
+              selectedPlayers.map((p) => p.full_name).join(", ")
+            )}
           </p>
         </section>
       )}
@@ -481,7 +494,13 @@ export function RoundForm({
                   {selectedPlayers.map((p) => (
                     <th key={p.id} className="px-1 py-1 text-center">
                       <div className="flex flex-col items-center gap-1">
-                        <span className="whitespace-nowrap">{p.full_name.split(" ")[0]}</span>
+                        <span
+                          className={`whitespace-nowrap font-medium ${
+                            isMatch ? sideTextClass(p.id, teamA, teamB) : ""
+                          }`}
+                        >
+                          {p.full_name.split(" ")[0]}
+                        </span>
                         <button
                           type="button"
                           onClick={() => fillPar(p.id)}
@@ -656,15 +675,20 @@ export function RoundForm({
                       <span className="text-muted">Partido sin empezar.</span>
                     ) : matchPreview.outcome === "in_progress" ? (
                       <span className="font-medium">
-                        {upDownLabel(matchTotalSummary!, teamAName, teamBName)} · thru{" "}
-                        {matchTotalSummary!.thru}
+                        <span className={matchLeaderColorClass}>
+                          {upDownLabel(matchTotalSummary!, teamAName, teamBName)}
+                        </span>{" "}
+                        · thru {matchTotalSummary!.thru}
                       </span>
                     ) : matchPreview.outcome === "halved" ? (
                       <span className="font-medium">Empate (AS)</span>
                     ) : (
                       <span className="font-medium">
-                        Gana {matchPreview.outcome === "team_a" ? teamAName : teamBName} (
-                        {matchPreview.statusLabel})
+                        Gana{" "}
+                        <span className={matchPreview.outcome === "team_a" ? "text-primary" : "text-accent"}>
+                          {matchPreview.outcome === "team_a" ? teamAName : teamBName}
+                        </span>{" "}
+                        ({matchPreview.statusLabel})
                       </span>
                     )}
                   </div>
@@ -696,7 +720,9 @@ export function RoundForm({
                         const row = strokeTotal.find((r) => r.player_id === p.id);
                         return (
                           <div key={p.id} className="flex items-center justify-between">
-                            <span>{p.full_name.split(" ")[0]}</span>
+                            <span className={`font-medium ${sideTextClass(p.id, teamA, teamB)}`}>
+                              {p.full_name.split(" ")[0]}
+                            </span>
                             <span>
                               {useHandicap
                                 ? `${row?.netTotal ?? "–"} (bruto ${row?.grossTotal ?? "–"})`
