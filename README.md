@@ -22,12 +22,16 @@ usarse desde el móvil justo al acabar de jugar.
   Stableford por partida, récord en 1 contra 1 y en parejas.
 - **Con hándicap o sin (scratch)**: cada partida elige si se juega con hándicap o "a pelo" (como
   si todos tuvierais 0). Se guarda en la propia partida y se ve en el listado y en el detalle.
-- **Par por defecto**: al elegir quién juega, la tarjeta arranca ya rellena a par en todos los
-  hoyos; solo tocáis los hoyos donde el resultado no sea par.
+- **Tarjeta en blanco**: al elegir quién juega, la tarjeta arranca vacía (no rellena par); hay un
+  botón "rellenar par" por jugador para quien prefiera partir de ahí y solo tocar lo que cambie.
 - **Tarjeta con ida, vuelta y total**: en campos de 18 hoyos se ve el parcial de los hoyos 1-9,
   el de los hoyos 10-18 y el total, tanto al apuntar como al consultar una partida.
 - **Match play en vivo**: mientras metes los golpes se ve quién va arriba y por cuántos hoyos, a
-  cuántos hoyos jugados ("thru"), y el desglose ida / vuelta / total.
+  cuántos hoyos jugados ("thru"), y el desglose ida / vuelta / total. Además, junto a cada hoyo ya
+  jugado aparece en la propia tarjeta quién iba ganando en ese momento (columna "Resultado").
+- **Clasificación por partida (golpes / Stableford)**: cada partida de golpes o Stableford muestra
+  su propia clasificación ordenada (posición, resultado, a par y hoyos jugados), tanto en vivo
+  mientras se apuntan los golpes como una vez que la partida está terminada.
 - **Apuntar resultado en dos pasos**: primero se elige temporada, campo, fecha, quién juega y si
   hay hándicap (eso ya se guarda); después se abre la tarjeta para ir metiendo los golpes hoyo a
   hoyo, viendo el resultado en vivo.

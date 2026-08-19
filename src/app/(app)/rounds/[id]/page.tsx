@@ -11,9 +11,18 @@ import {
   type HoleInfo,
   type PlayerHoleScores,
 } from "@/lib/scoring/engine";
-import { hasBackNine, splitFrontBack, summarizeMatchHoles, upDownLabel } from "@/lib/scoring/segments";
+import {
+  hasBackNine,
+  parPlayed,
+  runningMatchStatuses,
+  splitFrontBack,
+  summarizeMatchHoles,
+  toParLabel,
+  upDownLabel,
+} from "@/lib/scoring/segments";
 import { MODALITY_SHORT } from "@/lib/types";
 import { DeleteRoundButton } from "@/components/rounds/DeleteRoundButton";
+import { RoundLeaderboard, type LeaderboardRow } from "@/components/rounds/RoundLeaderboard";
 
 export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id]">) {
   const { id } = await params;
@@ -64,6 +73,7 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
     ? summarizeMatchHoles(matchResult.holes.filter((h) => h.hole_number > 9))
     : null;
   const matchTotalSummary = matchResult ? summarizeMatchHoles(matchResult.holes) : null;
+  const matchRunning = matchResult ? runningMatchStatuses(matchResult.holes) : [];
   const teamAName = round.team_a?.map((pid) => nameById.get(pid)).join(" y ") ?? "";
   const teamBName = round.team_b?.map((pid) => nameById.get(pid)).join(" y ") ?? "";
 
@@ -105,6 +115,7 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
                   {nameById.get(rp.player_id)?.split(" ")[0] ?? "?"}
                 </th>
               ))}
+              {isMatch && <th className="px-1 py-1 text-center">Resultado</th>}
             </tr>
           </thead>
 
@@ -122,6 +133,7 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
                       "–"}
                   </td>
                 ))}
+                {isMatch && <MatchStatusCell running={matchRunning} holeNumber={h.hole_number} />}
               </tr>
             ))}
           </tbody>
@@ -149,6 +161,7 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
                           "–"}
                       </td>
                     ))}
+                    {isMatch && <MatchStatusCell running={matchRunning} holeNumber={h.hole_number} />}
                   </tr>
                 ))}
               </tbody>
@@ -162,32 +175,48 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
             </>
           )}
         </table>
+        {isMatch && (
+          <p className="mt-2 text-xs text-muted">
+            Columna «Resultado»: <span className="font-semibold text-primary">verde</span> ={" "}
+            {teamAName || "equipo A"} arriba · <span className="font-semibold text-accent">ámbar</span> ={" "}
+            {teamBName || "equipo B"} arriba · AS = empatados.
+          </p>
+        )}
       </section>
 
       {modality === "stroke" && (
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-2 font-semibold">{MODALITY_SHORT.stroke} (neto)</h2>
-          <ResultTable
-            rows={strokeTotal.map((r) => ({
-              name: nameById.get(r.player_id) ?? "?",
-              main: r.netTotal,
-              extra: `bruto ${r.grossTotal}${r.thru ? "" : " · incompleta"}`,
-            }))}
-            unit="golpes netos"
+          <h2 className="mb-2 font-semibold">Clasificación · {MODALITY_SHORT.stroke} (neto)</h2>
+          <RoundLeaderboard
+            rows={strokeTotal.map((r): LeaderboardRow => {
+              const strokes =
+                playerScores.find((p) => p.player_id === r.player_id)?.strokes ?? {};
+              return {
+                player_id: r.player_id,
+                name: nameById.get(r.player_id) ?? "?",
+                main: r.netTotal,
+                mainLabel: "Neto",
+                toPar: toParLabel(r.netTotal, parPlayed(holes, strokes)),
+                thru: `${r.holesPlayed}/${holes.length}`,
+                extra: `bruto ${r.grossTotal}${r.thru ? "" : " · incompleta"}`,
+              };
+            })}
           />
         </section>
       )}
 
       {modality === "stableford" && (
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="mb-2 font-semibold">{MODALITY_SHORT.stableford}</h2>
-          <ResultTable
-            rows={stablefordTotal.map((r) => ({
+          <h2 className="mb-2 font-semibold">Clasificación · {MODALITY_SHORT.stableford}</h2>
+          <RoundLeaderboard
+            rows={stablefordTotal.map((r): LeaderboardRow => ({
+              player_id: r.player_id,
               name: nameById.get(r.player_id) ?? "?",
               main: r.points,
+              mainLabel: "Puntos",
+              thru: `${r.holesPlayed}/${holes.length}`,
               extra: `bruto ${r.grossTotal}${r.thru ? "" : " · incompleta"}`,
             }))}
-            unit="puntos"
           />
         </section>
       )}
@@ -252,33 +281,6 @@ export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id
   );
 }
 
-function ResultTable({
-  rows,
-  unit,
-}: {
-  rows: { name: string; main: number; extra: string }[];
-  unit: string;
-}) {
-  return (
-    <ol className="flex flex-col gap-1">
-      {rows.map((r, idx) => (
-        <li key={r.name} className="flex items-center justify-between rounded-md bg-background px-3 py-2">
-          <span className="flex items-center gap-2">
-            <span className="text-xs font-bold text-muted">{idx + 1}º</span>
-            {r.name}
-          </span>
-          <span className="text-sm">
-            <span className="font-semibold">{r.main}</span>{" "}
-            <span className="text-xs text-muted">
-              {unit} · {r.extra}
-            </span>
-          </span>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 function DetailSubtotalRow({
   label,
   modality,
@@ -308,5 +310,24 @@ function DetailSubtotalRow({
         ))}
       </tr>
     </tbody>
+  );
+}
+
+function MatchStatusCell({
+  running,
+  holeNumber,
+}: {
+  running: ReturnType<typeof runningMatchStatuses>;
+  holeNumber: number;
+}) {
+  const status = running.find((r) => r.hole_number === holeNumber);
+  return (
+    <td
+      className={`px-1 py-1 text-center text-xs font-semibold tabular-nums ${
+        status?.leader === "a" ? "text-primary" : status?.leader === "b" ? "text-accent" : "text-muted"
+      }`}
+    >
+      {status?.label || "–"}
+    </td>
   );
 }

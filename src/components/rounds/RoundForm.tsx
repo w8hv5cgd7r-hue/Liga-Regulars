@@ -11,7 +11,16 @@ import {
   type HoleInfo,
   type PlayerHoleScores,
 } from "@/lib/scoring/engine";
-import { hasBackNine, splitFrontBack, summarizeMatchHoles, upDownLabel } from "@/lib/scoring/segments";
+import {
+  hasBackNine,
+  parPlayed,
+  runningMatchStatuses,
+  splitFrontBack,
+  summarizeMatchHoles,
+  toParLabel,
+  upDownLabel,
+} from "@/lib/scoring/segments";
+import { RoundLeaderboard, type LeaderboardRow } from "@/components/rounds/RoundLeaderboard";
 import {
   MODALITY_LABEL,
   MODALITY_SHORT,
@@ -95,19 +104,6 @@ export function RoundForm({
   const selectedIdsResolved = isMatch ? [...teamA, ...teamB] : selectedIds;
   const selectedPlayers = players.filter((p) => selectedIdsResolved.includes(p.id));
 
-  // Golpes "efectivos" de un jugador: lo que se haya introducido a mano, y
-  // por defecto el par en cualquier hoyo que todavía no se haya tocado. Es
-  // un valor derivado (no se guarda en el estado) para no pisar golpes ya
-  // introducidos ni provocar renders en cascada.
-  function resolvedScores(playerId: string): Record<number, number> {
-    const explicit = scores[playerId] ?? {};
-    const merged: Record<number, number> = { ...explicit };
-    for (const h of holes) {
-      if (merged[h.hole_number] == null) merged[h.hole_number] = h.par;
-    }
-    return merged;
-  }
-
   function ensureHandicap(id: string, player: Player) {
     setHandicaps((prev) => (prev[id] != null ? prev : { ...prev, [id]: player.handicap }));
   }
@@ -137,6 +133,12 @@ export function RoundForm({
     }));
   }
 
+  function fillPar(playerId: string) {
+    const next: Record<number, number> = { ...scores[playerId] };
+    for (const h of holes) if (next[h.hole_number] == null) next[h.hole_number] = h.par;
+    setScores((prev) => ({ ...prev, [playerId]: next }));
+  }
+
   // Vista previa en vivo del resultado con lo que se lleva introducido.
   const holeInfos: HoleInfo[] = holes.map((h) => ({
     hole_number: h.hole_number,
@@ -149,7 +151,7 @@ export function RoundForm({
   const playerScoresForEngine: PlayerHoleScores[] = selectedPlayers.map((p) => ({
     player_id: p.id,
     handicap: useHandicap ? handicaps[p.id] ?? p.handicap : 0,
-    strokes: resolvedScores(p.id),
+    strokes: scores[p.id] ?? {},
   }));
 
   // Se calcula siempre (no solo en modalidad golpes) porque también se
@@ -184,6 +186,7 @@ export function RoundForm({
     ? summarizeMatchHoles(matchPreview.holes.filter((h) => h.hole_number > 9))
     : null;
   const matchTotalSummary = matchPreview ? summarizeMatchHoles(matchPreview.holes) : null;
+  const matchRunning = matchPreview ? runningMatchStatuses(matchPreview.holes) : [];
   const teamAName = teamA.map((id) => players.find((p) => p.id === id)?.full_name).join(" y ");
   const teamBName = teamB.map((id) => players.find((p) => p.id === id)?.full_name).join(" y ");
 
@@ -212,7 +215,7 @@ export function RoundForm({
     }
 
     const scoreRows = selectedPlayers.flatMap((p) =>
-      Object.entries(resolvedScores(p.id)).map(([hole, strokes]) => ({
+      Object.entries(scores[p.id] ?? {}).map(([hole, strokes]) => ({
         player_id: p.id,
         hole_number: Number(hole),
         strokes,
@@ -477,9 +480,19 @@ export function RoundForm({
                   <th className="w-10 px-1 py-1">Par</th>
                   {selectedPlayers.map((p) => (
                     <th key={p.id} className="px-1 py-1 text-center">
-                      <span className="whitespace-nowrap">{p.full_name.split(" ")[0]}</span>
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="whitespace-nowrap">{p.full_name.split(" ")[0]}</span>
+                        <button
+                          type="button"
+                          onClick={() => fillPar(p.id)}
+                          className="text-[10px] font-medium text-primary underline"
+                        >
+                          rellenar par
+                        </button>
+                      </div>
                     </th>
                   ))}
+                  {isMatch && <th className="w-14 px-1 py-1 text-center">Resultado</th>}
                 </tr>
               </thead>
 
@@ -494,12 +507,13 @@ export function RoundForm({
                     {selectedPlayers.map((p) => (
                       <td key={p.id} className="px-1 py-1">
                         <StrokeStepper
-                          value={resolvedScores(p.id)[h.hole_number]}
+                          value={scores[p.id]?.[h.hole_number]}
                           onChange={(v) => setScore(p.id, h.hole_number, v)}
                           defaultValue={h.par}
                         />
                       </td>
                     ))}
+                    {isMatch && <MatchStatusCell running={matchRunning} holeNumber={h.hole_number} />}
                   </tr>
                 ))}
               </tbody>
@@ -524,12 +538,13 @@ export function RoundForm({
                         {selectedPlayers.map((p) => (
                           <td key={p.id} className="px-1 py-1">
                             <StrokeStepper
-                              value={resolvedScores(p.id)[h.hole_number]}
+                              value={scores[p.id]?.[h.hole_number]}
                               onChange={(v) => setScore(p.id, h.hole_number, v)}
                               defaultValue={h.par}
                             />
                           </td>
                         ))}
+                        {isMatch && <MatchStatusCell running={matchRunning} holeNumber={h.hole_number} />}
                       </tr>
                     ))}
                   </tbody>
@@ -583,6 +598,54 @@ export function RoundForm({
               )}
             </table>
           </div>
+
+          {isMatch && (
+            <p className="mt-2 text-xs text-muted">
+              Columna «Resultado»: <span className="font-semibold text-primary">verde</span> ={" "}
+              {teamAName || "equipo A"} arriba · <span className="font-semibold text-accent">ámbar</span> ={" "}
+              {teamBName || "equipo B"} arriba · AS = empatados.
+            </p>
+          )}
+
+          {(modality === "stroke" || modality === "stableford") && (
+            <div className="mt-4 border-t border-border pt-3">
+              <h3 className="mb-2 text-sm font-semibold">Clasificación en vivo</h3>
+              <RoundLeaderboard
+                rows={
+                  modality === "stroke"
+                    ? strokeTotal
+                        .filter((r) => r.holesPlayed > 0)
+                        .map((r): LeaderboardRow => {
+                          const strokes = scores[r.player_id] ?? {};
+                          return {
+                            player_id: r.player_id,
+                            name:
+                              selectedPlayers.find((p) => p.id === r.player_id)?.full_name.split(" ")[0] ??
+                              "?",
+                            main: r.netTotal,
+                            mainLabel: "Neto",
+                            toPar: toParLabel(r.netTotal, parPlayed(holeInfos, strokes)),
+                            thru: `${r.holesPlayed}/${holeInfos.length}`,
+                            extra: `bruto ${r.grossTotal}`,
+                          };
+                        })
+                    : stablefordTotal
+                        .filter((r) => r.holesPlayed > 0)
+                        .map((r): LeaderboardRow => ({
+                          player_id: r.player_id,
+                          name:
+                            selectedPlayers.find((p) => p.id === r.player_id)?.full_name.split(" ")[0] ??
+                            "?",
+                          main: r.points,
+                          mainLabel: "Puntos",
+                          thru: `${r.holesPlayed}/${holeInfos.length}`,
+                          extra: `bruto ${r.grossTotal}`,
+                        }))
+                }
+                emptyLabel="Empieza a meter golpes para ver la clasificación."
+              />
+            </div>
+          )}
 
           {isMatch && (
             <div className="mt-3 rounded-md bg-background p-3 text-sm">
@@ -778,6 +841,25 @@ function SubtotalRow({
         ))}
       </tr>
     </tbody>
+  );
+}
+
+function MatchStatusCell({
+  running,
+  holeNumber,
+}: {
+  running: ReturnType<typeof runningMatchStatuses>;
+  holeNumber: number;
+}) {
+  const status = running.find((r) => r.hole_number === holeNumber);
+  return (
+    <td
+      className={`px-1 py-1 text-center text-xs font-semibold tabular-nums ${
+        status?.leader === "a" ? "text-primary" : status?.leader === "b" ? "text-accent" : "text-muted"
+      }`}
+    >
+      {status?.label || "–"}
+    </td>
   );
 }
 
