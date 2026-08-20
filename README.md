@@ -35,6 +35,11 @@ usarse desde el móvil justo al acabar de jugar.
 - **Apuntar resultado en dos pasos**: primero se elige temporada, campo, fecha, quién juega y si
   hay hándicap (eso ya se guarda); después se abre la tarjeta para ir metiendo los golpes hoyo a
   hoyo, viendo el resultado en vivo.
+- **Guardado hoyo a hoyo y en vivo**: cada golpe se guarda solo en cuanto lo metes (no hace falta
+  esperar a "Guardar resultado"), con un aviso de color en la propia celda mientras se guarda y un
+  ✓ junto al hoyo cuando ya lo han metido todos los jugadores de esa tarjeta. Además, quien tenga
+  abierta esa partida en su móvil (por ejemplo un compañero mirando el detalle) ve los resultados
+  actualizarse solos, casi al instante, sin tener que refrescar la página.
 - **Editar y borrar partidas** ya guardadas, solo quien las creó o un administrador.
 - Diseño mobile-first, con barra de navegación inferior, botones grandes y posibilidad de
   "instalar" la web en la pantalla de inicio del móvil (PWA básica).
@@ -67,8 +72,34 @@ alter table rounds add column if not exists use_handicap boolean not null defaul
 ```
 
 Esto añade la nueva columna sin tocar las partidas que ya tenías guardadas (todas quedan marcadas
-como "con hándicap", que es como se jugaban hasta ahora). Después de ejecutar esto ya puedes subir
-el código nuevo a GitHub con normalidad.
+como "con hándicap", que es como se jugaban hasta ahora).
+
+### Guardado en vivo (hoyo a hoyo)
+
+Si vienes de una versión anterior a la del guardado en vivo, hace falta OTRO cambio en la base de
+datos, también **antes** de subir el código nuevo. En **SQL Editor → New query**, pega esto y
+pulsa **Run**:
+
+```sql
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'hole_scores'
+  ) then
+    alter publication supabase_realtime add table hole_scores;
+  end if;
+end $$;
+```
+
+Esto activa Supabase Realtime para la tabla de golpes por hoyo (`hole_scores`); sin este paso el
+guardado hoyo a hoyo sigue funcionando igual, pero nadie verá las actualizaciones en vivo (hace
+falta refrescar a mano como antes). Si tras ejecutar el SQL sigue sin verse en vivo, comprueba en
+el panel de Supabase, en **Database → Replication**, que la tabla `hole_scores` aparece marcada
+dentro de la publicación `supabase_realtime`.
+
+Después de ejecutar el SQL que corresponda ya puedes subir el código nuevo a GitHub con
+normalidad.
 
 ## Puesta en marcha
 

@@ -238,6 +238,22 @@ create policy "hole_scores_write" on hole_scores for all to authenticated
   using (is_active_player()) with check (is_active_player());
 
 -- -------------------------------------------------------------------------
+-- Realtime: para que quien tenga abierta una partida vea los golpes de sus
+-- compañeros casi al instante, sin refrescar a mano, hay que publicar los
+-- cambios de hole_scores por Supabase Realtime. El bloque es idempotente
+-- (no falla si ya estaba añadida).
+-- -------------------------------------------------------------------------
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'hole_scores'
+  ) then
+    alter publication supabase_realtime add table hole_scores;
+  end if;
+end $$;
+
+-- -------------------------------------------------------------------------
 -- Fin del esquema. Recuerda (ver README.md):
 --   UPDATE players SET role = 'admin', status = 'active' WHERE email = 'tu-email@ejemplo.com';
 -- para convertirte en el primer administrador tras registrarte.

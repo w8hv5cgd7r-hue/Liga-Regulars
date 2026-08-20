@@ -113,6 +113,12 @@ create table if not exists rounds (
   notes text,
   team_a uuid[],
   team_b uuid[],
+  -- Si es false, la partida se juega "scratch" (como si todos tuvieran
+  -- hándicap 0): no se reparten golpes de hándicap al calcular el neto,
+  -- los puntos Stableford ni el match play de esta ronda en concreto. El
+  -- hándicap real de cada jugador se sigue guardando en round_players para
+  -- el histórico/gráfica de evolución.
+  use_handicap boolean not null default true,
   created_by uuid references players(id),
   created_at timestamptz not null default now()
 );
@@ -230,6 +236,22 @@ create policy "hole_scores_select" on hole_scores for select to authenticated us
 drop policy if exists "hole_scores_write" on hole_scores;
 create policy "hole_scores_write" on hole_scores for all to authenticated
   using (is_active_player()) with check (is_active_player());
+
+-- -------------------------------------------------------------------------
+-- Realtime: para que quien tenga abierta una partida vea los golpes de sus
+-- compañeros casi al instante, sin refrescar a mano, hay que publicar los
+-- cambios de hole_scores por Supabase Realtime. El bloque es idempotente
+-- (no falla si ya estaba añadida).
+-- -------------------------------------------------------------------------
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'hole_scores'
+  ) then
+    alter publication supabase_realtime add table hole_scores;
+  end if;
+end $$;
 
 -- -------------------------------------------------------------------------
 -- Fin del esquema. Recuerda (ver README.md):
