@@ -223,9 +223,13 @@ export function RoundForm({
   // muestra como resultado de golpes dentro del resumen de match play.
   const strokeTotal = holeInfos.length ? computeStrokePlay(holeInfos, playerScoresForEngine) : [];
   const strokeFront =
-    modality === "stroke" && frontHoles.length ? computeStrokePlay(frontHoles, playerScoresForEngine) : [];
+    (modality === "stroke" || isMatch) && frontHoles.length
+      ? computeStrokePlay(frontHoles, playerScoresForEngine)
+      : [];
   const strokeBack =
-    modality === "stroke" && backHoles.length ? computeStrokePlay(backHoles, playerScoresForEngine) : [];
+    (modality === "stroke" || isMatch) && backHoles.length
+      ? computeStrokePlay(backHoles, playerScoresForEngine)
+      : [];
 
   const stablefordTotal =
     modality === "stableford" && holeInfos.length
@@ -802,23 +806,55 @@ export function RoundForm({
                     <span className="block text-xs font-medium text-foreground">
                       Resultado de golpes {useHandicap ? "(neto)" : "(sin hándicap)"}
                     </span>
-                    <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted">
-                      {selectedPlayers.map((p) => {
-                        const row = strokeTotal.find((r) => r.player_id === p.id);
-                        return (
-                          <div key={p.id} className="flex items-center justify-between">
-                            <span className={`font-medium ${sideTextClass(p.id, teamA, teamB)}`}>
-                              {p.full_name.split(" ")[0]}
-                            </span>
-                            <span>
-                              {useHandicap
-                                ? `${row?.netTotal ?? "–"} (bruto ${row?.grossTotal ?? "–"})`
-                                : (row?.grossTotal ?? "–")}
-                            </span>
-                          </div>
-                        );
-                      })}
+                    <div className="mt-1 overflow-x-auto">
+                      <table className="w-full text-xs text-muted">
+                        <thead>
+                          <tr className="text-left">
+                            <th className="py-1 pr-2 font-medium text-foreground">Jugador</th>
+                            {showBackNine && (
+                              <th className="px-1 py-1 text-center font-medium text-foreground">Ida</th>
+                            )}
+                            {showBackNine && (
+                              <th className="px-1 py-1 text-center font-medium text-foreground">Vuelta</th>
+                            )}
+                            <th className="px-1 py-1 text-center font-medium text-foreground">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedPlayers.map((p) => {
+                            const fmt = (row: (typeof strokeTotal)[number] | undefined) =>
+                              row == null
+                                ? "–"
+                                : useHandicap
+                                  ? `${row.netTotal} (${row.grossTotal})`
+                                  : `${row.grossTotal}`;
+                            return (
+                              <tr key={p.id}>
+                                <td className={`py-1 pr-2 font-medium ${sideTextClass(p.id, teamA, teamB)}`}>
+                                  {p.full_name.split(" ")[0]}
+                                </td>
+                                {showBackNine && (
+                                  <td className="px-1 py-1 text-center">
+                                    {fmt(strokeFront.find((r) => r.player_id === p.id))}
+                                  </td>
+                                )}
+                                {showBackNine && (
+                                  <td className="px-1 py-1 text-center">
+                                    {fmt(strokeBack.find((r) => r.player_id === p.id))}
+                                  </td>
+                                )}
+                                <td className="px-1 py-1 text-center">
+                                  {fmt(strokeTotal.find((r) => r.player_id === p.id))}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
+                    {useHandicap && (
+                      <p className="mt-1 text-[11px] text-muted">Neto (bruto entre paréntesis).</p>
+                    )}
                   </div>
                 </div>
               ) : (

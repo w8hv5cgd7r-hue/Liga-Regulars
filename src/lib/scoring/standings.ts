@@ -38,14 +38,14 @@ export interface StandingRow {
   bestStablefordPoints?: number;
 }
 
-function toHoleInfo(round: RoundFull): HoleInfo[] {
+export function toHoleInfo(round: RoundFull): HoleInfo[] {
   return round.course.holes
     .slice()
     .sort((a, b) => a.hole_number - b.hole_number)
     .map((h) => ({ hole_number: h.hole_number, par: h.par, stroke_index: h.stroke_index }));
 }
 
-function toPlayerScores(round: RoundFull): PlayerHoleScores[] {
+export function toPlayerScores(round: RoundFull): PlayerHoleScores[] {
   return round.players.map((rp) => ({
     player_id: rp.player_id,
     // Si la ronda se jugó sin hándicap, se computa como si todos fueran
@@ -60,7 +60,7 @@ function toPlayerScores(round: RoundFull): PlayerHoleScores[] {
   }));
 }
 
-function completePlayers(round: RoundFull, holes: HoleInfo[]): PlayerHoleScores[] {
+export function completePlayers(round: RoundFull, holes: HoleInfo[]): PlayerHoleScores[] {
   return toPlayerScores(round).filter((p) => holes.every((h) => p.strokes[h.hole_number] != null));
 }
 

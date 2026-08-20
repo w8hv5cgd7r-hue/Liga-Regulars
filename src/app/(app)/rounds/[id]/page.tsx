@@ -67,9 +67,16 @@ export default async function RoundDetailPage({
 
   // Se calcula siempre (no solo en modalidad golpes) porque también se
   // muestra como resultado de golpes dentro del resumen de match play.
+  const isMatch = modality === "match1v1" || modality === "matchpairs";
   const strokeTotal = computeStrokePlay(holes, playerScores);
-  const strokeFront = modality === "stroke" && frontHoles.length ? computeStrokePlay(frontHoles, playerScores) : [];
-  const strokeBack = modality === "stroke" && backHoles.length ? computeStrokePlay(backHoles, playerScores) : [];
+  const strokeFront =
+    (modality === "stroke" || isMatch) && frontHoles.length
+      ? computeStrokePlay(frontHoles, playerScores)
+      : [];
+  const strokeBack =
+    (modality === "stroke" || isMatch) && backHoles.length
+      ? computeStrokePlay(backHoles, playerScores)
+      : [];
 
   const stablefordTotal = modality === "stableford" ? computeStableford(holes, playerScores) : [];
   const stablefordFront =
@@ -77,7 +84,6 @@ export default async function RoundDetailPage({
   const stablefordBack =
     modality === "stableford" && backHoles.length ? computeStableford(backHoles, playerScores) : [];
 
-  const isMatch = modality === "match1v1" || modality === "matchpairs";
   const matchResult =
     isMatch && round.team_a && round.team_b
       ? computeMatchPlay(holes, playerScores, round.team_a, round.team_b)
@@ -320,23 +326,55 @@ export default async function RoundDetailPage({
             <span className="block text-xs font-medium text-foreground">
               Resultado de golpes {useHandicap ? "(neto)" : "(sin hándicap)"}
             </span>
-            <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-muted">
-              {round.players.map((rp) => {
-                const row = strokeTotal.find((r) => r.player_id === rp.player_id);
-                return (
-                  <div key={rp.player_id} className="flex items-center justify-between">
-                    <span className={`font-medium ${sideTextClass(rp.player_id, teamAIds, teamBIds)}`}>
-                      {nameById.get(rp.player_id)?.split(" ")[0] ?? "?"}
-                    </span>
-                    <span>
-                      {useHandicap
-                        ? `${row?.netTotal ?? "–"} (bruto ${row?.grossTotal ?? "–"})`
-                        : (row?.grossTotal ?? "–")}
-                    </span>
-                  </div>
-                );
-              })}
+            <div className="mt-1 overflow-x-auto">
+              <table className="w-full text-xs text-muted">
+                <thead>
+                  <tr className="text-left">
+                    <th className="py-1 pr-2 font-medium text-foreground">Jugador</th>
+                    {showBackNine && (
+                      <th className="px-1 py-1 text-center font-medium text-foreground">Ida</th>
+                    )}
+                    {showBackNine && (
+                      <th className="px-1 py-1 text-center font-medium text-foreground">Vuelta</th>
+                    )}
+                    <th className="px-1 py-1 text-center font-medium text-foreground">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {round.players.map((rp) => {
+                    const fmt = (row: (typeof strokeTotal)[number] | undefined) =>
+                      row == null
+                        ? "–"
+                        : useHandicap
+                          ? `${row.netTotal} (${row.grossTotal})`
+                          : `${row.grossTotal}`;
+                    return (
+                      <tr key={rp.player_id}>
+                        <td
+                          className={`py-1 pr-2 font-medium ${sideTextClass(rp.player_id, teamAIds, teamBIds)}`}
+                        >
+                          {nameById.get(rp.player_id)?.split(" ")[0] ?? "?"}
+                        </td>
+                        {showBackNine && (
+                          <td className="px-1 py-1 text-center">
+                            {fmt(strokeFront.find((r) => r.player_id === rp.player_id))}
+                          </td>
+                        )}
+                        {showBackNine && (
+                          <td className="px-1 py-1 text-center">
+                            {fmt(strokeBack.find((r) => r.player_id === rp.player_id))}
+                          </td>
+                        )}
+                        <td className="px-1 py-1 text-center">
+                          {fmt(strokeTotal.find((r) => r.player_id === rp.player_id))}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
+            {useHandicap && <p className="mt-1 text-[11px] text-muted">Neto (bruto entre paréntesis).</p>}
           </div>
         </section>
       )}
