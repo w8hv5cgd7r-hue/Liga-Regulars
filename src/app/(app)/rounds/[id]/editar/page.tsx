@@ -6,7 +6,11 @@ import { getAllSeasons } from "@/lib/data/seasons";
 import { requireActivePlayer } from "@/lib/auth";
 import { RoundForm } from "@/components/rounds/RoundForm";
 
-export default async function EditRoundPage({ params }: PageProps<"/rounds/[id]/editar">) {
+export default async function EditRoundPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const me = await requireActivePlayer();
   const [round, players, courses, seasons] = await Promise.all([

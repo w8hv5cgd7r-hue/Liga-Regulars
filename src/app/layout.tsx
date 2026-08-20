@@ -19,7 +19,7 @@ export const viewport: Viewport = {
   themeColor: "#1f6f4a",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-background text-foreground">{children}</body>

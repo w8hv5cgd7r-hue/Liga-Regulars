@@ -27,7 +27,11 @@ import { DeleteRoundButton } from "@/components/rounds/DeleteRoundButton";
 import { LiveRoundWatcher } from "@/components/rounds/LiveRoundWatcher";
 import { RoundLeaderboard, type LeaderboardRow } from "@/components/rounds/RoundLeaderboard";
 
-export default async function RoundDetailPage({ params }: PageProps<"/rounds/[id]">) {
+export default async function RoundDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const me = await requireActivePlayer();
   const [round, allPlayers] = await Promise.all([getRoundFull(id), getPlayers()]);

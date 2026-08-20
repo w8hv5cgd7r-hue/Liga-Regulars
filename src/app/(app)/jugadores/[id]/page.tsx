@@ -11,7 +11,11 @@ import {
 import { HandicapChart, StablefordChart } from "@/components/players/PlayerCharts";
 import { formatDateEs } from "@/lib/format";
 
-export default async function PlayerStatsPage({ params }: PageProps<"/jugadores/[id]">) {
+export default async function PlayerStatsPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const [player, allPlayers, rounds] = await Promise.all([
     getPlayer(id),

@@ -2,7 +2,11 @@ import { notFound } from "next/navigation";
 import { getCourseWithHoles } from "@/lib/data/courses";
 import { CourseForm } from "@/components/admin/CourseForm";
 
-export default async function EditCoursePage({ params }: PageProps<"/admin/campos/[id]">) {
+export default async function EditCoursePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { id } = await params;
   const course = await getCourseWithHoles(id);
   if (!course) notFound();

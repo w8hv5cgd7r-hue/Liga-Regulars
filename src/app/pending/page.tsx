@@ -4,7 +4,9 @@ import { signOutAction } from "@/lib/actions/auth-actions";
 
 export default async function PendingPage({
   searchParams,
-}: PageProps<"/pending">) {
+}: {
+  searchParams: Promise<{ inactive?: string }>;
+}) {
   const params = await searchParams;
   const supabase = await createClient();
   const {

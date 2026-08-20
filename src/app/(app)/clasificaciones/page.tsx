@@ -11,7 +11,9 @@ const MODALITIES: Modality[] = ["stroke", "stableford", "match1v1", "matchpairs"
 
 export default async function ClasificacionesPage({
   searchParams,
-}: PageProps<"/clasificaciones">) {
+}: {
+  searchParams: Promise<{ modality?: string | string[]; temporada?: string | string[] }>;
+}) {
   const params = await searchParams;
   const modality = (Array.isArray(params?.modality) ? params.modality[0] : params?.modality) as
     | Modality
